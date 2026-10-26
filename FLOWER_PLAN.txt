@@ -1,0 +1,290 @@
+# Çiçek sınıflandırma yarışması: doğruluk, hız ve boyutu birlikte iyileştirme planı
+
+## 1. Hedef ve temel strateji
+
+**Önerim: önce güçlü bir sınıflandırıcı eğitmek, ardından bilgisini küçük bir modele aktararak yarışmaya tek, hızlı ve küçük bir model sunmak.** Bunun gerçekten fayda sağladığını deneylerle doğrulayacağız; küçük model tek başına daha iyi sonuç verirse onu kullanacağız.
+
+Hedefimiz, verdiğin açıklamaya göre **aynı 102 çiçek kategorisinin daha önce görülmemiş fotoğraflarını tanımak**.
+
+Arşivde doğrudan tespit ettiklerim:
+
+| Özellik | Sonuç |
+|---|---:|
+| Toplam fotoğraf | 8.189 |
+| Sınıf sayısı | 102 |
+| Eğitim / doğrulama / test | 6.552 / 818 / 819 |
+| Sınıf başına toplam fotoğraf | 40–258 |
+| Birebir aynı dosyalardan oluşan kopya grubu | 4 |
+| Eğitim ile doğrulama arasında kopya | 1 |
+| Dosya yapısı kontrolünde hata | 0 |
+
+Fotoğraf sayıları ve isimleri **Oxford Flowers 102 ile örtüşüyor**. Kaynak ve etiket eşleştirmesi ayrıca doğrulanacak. Oxford’un tanımı da birbirine çok benzeyen kategoriler ve kategori içinde önemli görünüş farklılıkları olduğunu belirtiyor. [Oxford veri seti](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/)
+
+Üç konuda avantaj sağlamaya çalışacağız:
+
+- **Doğruluk:** iyi ön eğitim, temiz veri, gerçekçi veri artırma ve bağımsız fotoğraflarla doğrulama.
+- **Hız:** küçük mimari, uygun görüntü çözünürlüğü ve ölçülmüş çıkarım optimizasyonları.
+- **Boyut:** 102 sınıfa uygun çıkış katmanı, yalnız gerekli ağırlıkların kaydı ve uygun sayısal hassasiyet.
+
+Puan formülü açıklanana kadar üç aday tutulacak: **doğruluk lideri, dengeli aday, küçük/hızlı aday**. Hangi modelin kazanacağını yalnız parametre sayısından veya mevcut doğrulama skorundan çıkarmayacağız.
+
+## 2. Veri ve güvenilir değerlendirme
+
+### Veri temizliği ve sınıf eşleştirmesi
+
+İlk aşamada her görüntü için dosya adı, sınıf, boyut, kaynak ve kopya grubunu içeren bir kayıt oluşturulacak.
+
+- Bütün görüntüler tamamen açılarak bozuk dosya kontrolü yapılacak. Şimdi yaptığım kontrol dosya yapısını doğruluyor; tam piksel çözme kontrolü eğitim hazırlığında yapılacak.
+- SHA-256 ile birebir kopyalar temizlenecek.
+- Algısal hash ve önceden eğitilmiş görüntü özellikleriyle çok benzer kareler bulunacak; aday eşleşmeler görsel olarak kontrol edilecek.
+- Aynı fotoğrafın farklı kırpılmış veya yeniden boyutlandırılmış sürümleri aynı grupta tutulacak.
+- Farklı etiketler arasında kopya bulunursa etiket kaynağı incelenecek; çözülemeyen örnekler eğitime alınmayacak.
+
+**Önemli uygulama ayrıntısı:** klasörler sayısal olarak sıralanacak: `1, 2, 3, …, 102`. Metin sıralamasının `1, 10, 100, …` şeklinde olması nedeniyle modelin doğru sınıfı yanlış numarayla döndürmesini önleyeceğiz.
+
+Modelin iç indeksleri `0–101`, kullanıcıya dönen sınıf kimlikleri orijinal `1–102` olacak. Tür adları doğrulanmış bir eşleştirme dosyasından gelecek.
+
+### İç doğrulama düzeni
+
+Mevcut doğrulama klasöründe bazı sınıfların yalnızca bir fotoğrafı var. Bunun yerine:
+
+1. Mevcut `test` klasörü başlangıçta kilitlenecek.
+2. `train + valid` birleştirilecek.
+3. Kopya gruplarını ayırmadan, sınıf dağılımını koruyan **üç parçalı çapraz doğrulama** hazırlanacak.
+4. Hızlı deneyler ilk parçada yapılacak.
+5. Yalnız finalistler üç parçanın tamamında değerlendirilecek.
+
+Testle benzerliği doğrulanan geliştirme görüntüleri geliştirme havuzundan çıkarılacak. Böylece aynı çiçeğin neredeyse aynı fotoğrafını hem eğitimde hem değerlendirmede kullanmayacağız.
+
+Ana ölçüt top-1 accuracy olacak. Ayrıca sınıf başına doğruluk ortalaması ve karışıklık matrisi tutulacak. Bu, modelin sık sınıflarda başarılı olup az örnekli sınıfları ihmal edip etmediğini gösterecek.
+
+### Hazır dış veri
+
+Elle fotoğraf toplamak yerine önce **Pl@ntNet-300K**, ardından gerekirse **iNaturalist** incelenecek. Pl@ntNet bilimsel tür adları ve kaynak bilgileri sunuyor; fakat etiket belirsizliği ve sınıf dengesizliği içeriyor. iNaturalist’in küçük eğitim arşivi bile 42 GB olduğu için doğrudan tamamını indirmek ilk adım olmayacak. [Pl@ntNet kaynak deposu](https://github.com/plantnet/PlantNet-300K), [iNaturalist veri açıklaması](https://github.com/visipedia/inat_comp/blob/master/2021/README.md)
+
+Dış veri için kurallar:
+
+- Önce etiket ve dosya listeleri incelenecek.
+- Yalnız bizim kategorilerimize anlamı açıkça karşılık gelen etiketler kullanılacak.
+- Ortak ad benzerliği tek başına yeterli sayılmayacak; bazı Oxford kategorileri tek bir biyolojik türden daha geniş olabilir.
+- Çiçek içermeyen yaprak veya gövde fotoğrafları, çiçek fotoğrafı değerlendirmesine karıştırılmayacak.
+- Oxford görüntüleriyle kopya kontrolü yapılacak.
+- Aynı gözleme ait fotoğraflar farklı bölümlere dağıtılmayacak.
+
+Uygun dış verinin %60’ı eğitim, %20’si geliştirme, %20’si kilitli dış test için ayrılacak. Kaynakta gözlem kimliği varsa gruplama buna göre yapılacak; yoksa fotoğraf benzerliği ve mevcut kaynak bilgileri kullanılacak.
+
+Dış değerlendirme yalnız bazı kategorileri kapsarsa kapsam açıkça raporlanacak; bu skor 102 sınıfın genel doğruluğu gibi sunulmayacak.
+
+**İlk gün içindeki veri incelemesinde güvenilir eşleşme bulunamazsa dış veri aşaması ertelenecek ve ana eğitim devam edecek.** Projenin teslimi bu kaynağa bağımlı olmayacak.
+
+## 3. Model ve eğitim deneyleri
+
+### Başlangıç modelleri
+
+Sıfırdan ağ eğitmek yerine önceden eğitilmiş üç model karşılaştırılacak:
+
+| Model | Rolü | 102 sınıflı ağırlıkların yaklaşık FP32 boyutu* |
+|---|---|---:|
+| MobileNetV4 Conv Small | Küçük ve hızlı aday | 12 MB |
+| EfficientNet-B0 | Dengeli başlangıç modeli | 17 MB |
+| ConvNeXtV2 Tiny | Doğruluk adayı ve öğretmen | 112 MB |
+
+\* Bunlar mimarilerin parametre sayısından hesaplanan yaklaşık ağırlık boyutlarıdır. Gerçek dosya boyutu eğitimden sonra ölçülecek; hız ve çiçek doğruluğu henüz ölçülmedi.
+
+Kullanılacak ön eğitimler:
+
+- `mobilenetv4_conv_small.e2400_r224_in1k`
+- `efficientnet_b0.ra4_e3600_r224_in1k`
+- `convnextv2_tiny.fcmae_ft_in22k_in1k`
+
+Bu adayların hazır ağırlıkları ve PyTorch/timm kullanım örnekleri mevcut. [MobileNetV4](https://huggingface.co/timm/mobilenetv4_conv_small.e2400_r224_in1k), [EfficientNet-B0](https://huggingface.co/timm/efficientnet_b0.ra4_e3600_r224_in1k), [ConvNeXtV2](https://huggingface.co/timm/convnextv2_tiny.fcmae_ft_in22k_in1k)
+
+### Aşama A — Çalışan temel modeller
+
+Üç model de aynı geliştirme parçasında ve aynı rastgelelik tohumu ile eğitilecek:
+
+- Başlangıç çözünürlüğü: `224 × 224`.
+- İlk 3 epoch: yalnız yeni sınıflandırma katmanı.
+- Sonraki 12 epoch: bütün ağın ince ayarı.
+- Optimizer: AdamW.
+- Etkin batch boyutu: 32; bellek yetmezse gradient accumulation.
+- Kayıp: cross-entropy, label smoothing `0.1`.
+- Öğrenme oranı azaltma: cosine schedule.
+- En iyi doğrulama ağırlıkları kaydedilecek.
+
+Her model için doğruluk, ortalama CPU/GPU süresi ve dosya boyutu aynı tabloda gösterilecek. Böylece daha ilk aşamada kullanılabilir bir teslim adayı olacak.
+
+### Aşama B — Kontrollü iyileştirme
+
+Küçük modeller için `1e-4` ve `3e-4`, öğretmen için `5e-5` ve `1e-4` omurga öğrenme oranları karşılaştırılacak. Yeni çıkış katmanının başlangıç öğrenme oranı `1e-3` olacak.
+
+Tam eğitim üst sınırı 30 epoch; doğrulama başarısı 8 epoch iyileşmezse erken durdurma uygulanacak.
+
+Başlangıç veri artırma düzeni:
+
+- Çiçeğin çoğunu koruyan rastgele kırpma: alan oranı `0.6–1.0`.
+- Yatay çevirme.
+- En fazla 30 derece döndürme.
+- Hafif parlaklık ve kontrast değişikliği.
+- Düşük şiddette renk değişikliği.
+- Düşük olasılıkla küçük bölge silme.
+
+Renk, çiçek kategorileri için ayırt edici olabileceğinden güçlü renk bozulmaları kullanılmayacak.
+
+Ardından ayrı deneylerle:
+
+- EMA ağırlık ortalaması.
+- Hafif MixUp: `alpha=0.2`.
+- Küçük modellerde `192 / 224 / 256` çözünürlük karşılaştırması.
+- Öğretmende `224` ve `288` çözünürlük karşılaştırması.
+- Güvenilir dış veri bulunduysa, batch’in en fazla yarısını dış verinin oluşturduğu karma eğitim.
+
+İyileştirmeler tek tek karşılaştırılacak. Daha fazla yöntem eklemek otomatik olarak daha iyi kabul edilmeyecek.
+
+### Aşama C — Güçlü modelden küçük modele bilgi aktarımı
+
+En iyi öğretmen, küçük modellere kendi sınıf dağılımlarını öğretecek. Bu yöntemde küçük model hem doğru etiketi hem öğretmenin benzer kategoriler arasındaki ayrımını öğrenir. Teslim sırasında yalnız küçük model çalışır. [PyTorch bilgi aktarımı rehberi](https://docs.pytorch.org/tutorials/beginner/knowledge_distillation_tutorial.html)
+
+Başlangıç ayarı:
+
+```text
+temperature = 2
+loss = 0.5 × cross_entropy
+     + 0.5 × temperature² × KL_divergence
+```
+
+- Öğretmen dondurulacak.
+- Öğretmen ve öğrenci aynı fotoğrafın aynı artırılmış görünümünü görecek.
+- İlk aktarım deneyinde MixUp kapalı olacak.
+- Öğretmen her doğrulama parçasında yalnız o parçanın eğitim bölümünden öğrenmiş olacak.
+- Bilgi aktarılmış model, aynı mimarinin doğrudan eğitilmiş sürümüyle karşılaştırılacak.
+
+Aktarım fayda sağlamazsa doğrudan eğitilmiş model korunacak.
+
+**Son teslimde varsayılan olarak tek model ve tek görüntü geçişi kullanılacak.** Çoklu model veya çoklu kırpma ancak puanlama kuralları hız maliyetini karşılayacak şekilde avantaj sağlarsa değerlendirilecek.
+
+## 4. Hız, boyut ve model seçim protokolü
+
+### Boyut ve çıkarım optimizasyonları
+
+Önce güvenilir FP32 sürümü hazırlanacak. Sonra:
+
+- Optimizer, eğitim geçmişi ve öğretmen ağırlıkları teslim dosyasından çıkarılacak.
+- FP16 ağırlık kaydı ayrıca denenecek.
+- GPU’da FP16 ve FP32 hızları gerçekten ölçülecek; T2000’de FP16’nın daha hızlı olduğu varsayılmayacak.
+- CPU’da FP16 dosya yüklenip FP32 çalıştırılabilir. Bu dosyayı küçültür; CPU hesaplamasını kendiliğinden hızlandırmaz.
+- CPU için INT8 quantization ayrıca denenecek. Desteklenmeyen veya yavaşlayan sürüm elenecek.
+- INT8 sonrası doğruluk kaybı varsa, yalnız anlamlı hız/boyut kazancı görüldüğünde kısa quantization-aware training yapılacak.
+
+Klasik CNN’lerde yalnız son doğrusal katmanı quantize etmek bütün ağın hızlandığı anlamına gelmez. Kullanılan PyTorch sürümü ve hedef CPU için uygun operatör desteği kontrol edilecek.
+
+### Hız ölçümü
+
+Her finalist aynı makinede ve aynı ayarlarla ölçülecek:
+
+- `batch_size=1`.
+- `model.eval()` ve `torch.inference_mode()`.
+- 50 ısınma tahmini.
+- Beş turda, tur başına 1.000 tahmin.
+- GPU ölçümünde doğru CUDA senkronizasyonu.
+- CPU thread sayısı ve donanım bilgisi kaydı.
+- Ortalama milisaniye ana sonuç; medyan ve p95 ek sonuç.
+
+Üç süre ayrı verilecek:
+
+1. Hazır tensörden model çıktısına kadar süre.
+2. Açılmış fotoğrafın ön işlenmesi ve tahmini.
+3. Diskten fotoğraf okuma dahil toplam süre.
+
+Modelin ilk yüklenme süresi ayrıca raporlanacak. Böylece hocanın hangi ölçümü kullanacağı açıklandığında karşılaştırmayı doğru yapabiliriz. [PyTorch benchmark araçları](https://docs.pytorch.org/docs/2.14/benchmark_utils.html)
+
+Dosya boyutu gerçek kayıttan `byte / 1.000.000` olarak MB cinsinden hesaplanacak.
+
+### Varsayılan seçim kuralı
+
+Puan formülü açıklanmazsa:
+
+- **Doğruluk lideri:** üç parçalı doğrulamada en yüksek ortalama top-1.
+- **Dengeli teslim adayı:** liderin en fazla **1 yüzde puanı** gerisindeki modeller arasında en düşük ortalama CPU tahmin süresi.
+- Süre farkı %5’in altındaysa daha küçük dosya tercih edilecek.
+- **Küçük/hızlı alternatif:** liderden en fazla 2 yüzde puanı geride kalan adaylar arasında boyut ve hız açısından en avantajlı seçenekler korunacak.
+
+Bu, hocanın bilinmeyen puan formülünün yerine geçtiği iddia edilen bir kural değil; belirsizlik sürerken kullanacağımız açık proje varsayımıdır. Hedef değerlendirme donanımı GPU olarak açıklanırsa seçimde GPU ölçümü kullanılacak.
+
+Finalistler ve ayarları dondurulduktan sonra kilitli iç/dış testler açılacak. Bu sonuçlara bakarak tekrar tekrar ayar yapılmayacak.
+
+Son eğitimde verilen arşivin tamamı kullanılabilecek. Bu son ağırlıklar için, daha önce eğitime katılmamış test sonuçlarıyla final modelin eğitimde gördüğü veriler açıkça ayrılacak; dış test varsa eğitim dışında kalacak.
+
+## 5. Çalışma ortamı, takvim ve teslim paketi
+
+### Senin kullanacağın ortam
+
+**Ücretli hizmet başlangıçta gerekli değil.**
+
+- **Quadro T2000 bilgisayar:** küçük model eğitimleri, CPU/GPU hız testleri ve günlük geliştirme.
+- **Ücretsiz Colab:** öğretmen eğitimi ve bellek isteyen bilgi aktarımı deneyleri.
+- **Intel UHD:** bu planın eğitim hızlandırıcısı olarak kullanılmayacak.
+- **Depolama:** ana çalışma için yaklaşık 20–30 GB boş alan; büyük dış veri indirilecekse daha fazlası.
+- **Yazılım:** GPU sürücüsüyle uyumlu PyTorch, torchvision, timm, Pillow ve scikit-learn. Çalışan sürümler sabitlenecek.
+- **Colab yedekleme:** ağırlık, optimizer, scheduler, rastgelelik durumu ve veri bölünmesi kaydedilecek; kesintiden sonra devam edilebilecek. Ücretsiz kaynaklar garanti edilmiyor. [Colab açıklaması](https://research.google.com/colaboratory/faq.html)
+
+GPU’lu bilgisayarda başlangıç kontrolü:
+
+```bash
+nvidia-smi
+```
+
+NVIDIA’nın T2000 mobil teknik tablosu 4 GB bellek gösteriyor; gerçek cihazdaki bellek, sürücü ve PyTorch CUDA erişimi ayrıca doğrulanacak. Küçük modellerde batch 8, öğretmende batch 2–4 ile başlanacak; gerçek bellek kullanımına göre otomatik azaltılacak. [NVIDIA teknik tablosu](https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/documents/quadro-mobile-pro-graphics-line-card-us-r1-hr.pdf)
+
+Bu sohbet ortamı diğer bilgisayarın GPU’suna doğrudan erişmiyor. Kodlar yerel bilgisayarda veya Colab notebook’unda çalıştırılacak; sonuç dosyaları aynı biçimde üretilecek.
+
+### Önerilen 7–10 günlük çalışma sırası
+
+| Zaman | Çıktı |
+|---|---|
+| 1. gün | Veri denetimi, kopya temizliği, etiketler, doğrulama bölünmeleri |
+| 2. gün | Üç başlangıç modeli ve ilk doğruluk/hız/boyut tablosu |
+| 3–4. gün | Öğrenme oranı, veri artırma ve hazır dış veri deneyleri |
+| 5–6. gün | Öğretmen eğitimi ve küçük modele bilgi aktarımı |
+| 7–8. gün | Finalistlerin çapraz doğrulaması, çözünürlük ve hassasiyet seçimi |
+| 9–10. gün | Kilitli değerlendirme, son eğitim ve teslim kontrolü |
+
+İlk iki epoch sonunda gerçek eğitim süreleri ölçülecek. Kaynak veya süre daralırsa öncelik sırası: **çalışan temel model → güvenilir doğrulama → en iyi küçük model → bilgi aktarımı → INT8**.
+
+### Teslim edilecekler
+
+- Seçilmiş model ağırlığı.
+- Mimari, ön işleme ve sınıf eşleştirmesi.
+- Tek fotoğrafta tahmin örneği.
+- Klasör üzerinde toplu tahmin kodu.
+- Eğitim ve kaldığı yerden devam kodu.
+- Colab notebook’u.
+- Sabitlenmiş bağımlılıklar.
+- Doğruluk, hız, dosya boyutu ve donanım bilgilerini içeren deney raporu.
+
+Python kullanım arayüzü:
+
+```python
+classifier = load_model("flower_model.pth", device="cpu")
+result = classifier.predict("flower.jpg")
+
+# {
+#   "class_id": "…",
+#   "class_name": "…",
+#   "confidence": ...
+# }
+```
+
+Tensör tabanlı değerlendirme için ayrıca `[B, 3, H, W]` girişten `[B, 102]` logits üreten arayüz sağlanacak. Model tek sefer yüklenecek ve çıkarım sırasında internetten ağırlık indirmeyecek.
+
+### Kabul kontrolleri ve açık varsayımlar
+
+- Sınıf kimliği dönüşümü bütün 102 sınıf için doğru.
+- Eğitim ve değerlendirme arasında doğrulanmış kopya sızıntısı yok.
+- Kaydedilip yeniden yüklenen model aynı tahminleri üretiyor.
+- CPU’da temiz bir Python ortamında çevrimdışı çalışıyor.
+- FP16/INT8 sürümlerinin doğruluk farkı ve gerçek hızları ölçülmüş.
+- Nihai dosyanın boyutu doğrudan ölçülmüş.
+- Deneyler veri listesi, ayarlar ve tohumlarla tekrar üretilebilir.
+
+Plan; **aynı 102 kategori**, **en az bir hafta süre**, **hazır ek veri kullanımı** ve **önceden eğitilmiş ağırlıklara izin verildiği** varsayımlarıyla hazırlanmıştır. Hocadan öğrenilmesi en değerli üç ayrıntı: puanların birleştirilme formülü, hız ölçüm donanımı ve dış veri/ön eğitim kuralları. Bunlar gelene kadar yukarıdaki varsayılanlarla geliştirme ilerleyebilir.

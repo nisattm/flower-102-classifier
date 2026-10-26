@@ -1,0 +1,32 @@
+{
+  "device": "cpu",
+  "cpu": "Intel64 Family 6 Model 165 Stepping 2, GenuineIntel",
+  "gpu": "Quadro T2000 with Max-Q Design",
+  "torch": "2.13.0+cu132",
+  "threads": 6,
+  "weights_mb": 10.690811,
+  "load_seconds": 0.0805273000150919,
+  "warmup": 10,
+  "repeats": 1,
+  "per_repeat": 100,
+  "latency": {
+    "tensor": {
+      "mean_ms": 10.462515000253916,
+      "median_ms": 10.702399944420904,
+      "p95_ms": 11.358619964448733,
+      "n": 100
+    },
+    "opened": {
+      "mean_ms": 13.036013995297253,
+      "median_ms": 13.009099988266826,
+      "p95_ms": 13.276955002220348,
+      "n": 100
+    },
+    "disk": {
+      "mean_ms": 15.225501006934792,
+      "median_ms": 15.285950037650764,
+      "p95_ms": 15.513114962959662,
+      "n": 100
+    }
+  }
+}

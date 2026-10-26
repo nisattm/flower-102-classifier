@@ -1,0 +1,15 @@
+.venv/
+flower_data/
+artifacts/hf_cache/
+artifacts/runs/
+artifacts/exports/
+artifacts/data/features.pt
+artifacts/data/*.jpg
+artifacts/data/*.jpeg
+artifacts/data/*.png
+artifacts/data/*.mat
+artifacts/data/*.html
+flower_colab_fold1_bundle.zip
+Flower102_submission.zip
+__pycache__/
+*.pyc

@@ -1,0 +1,62 @@
+[
+  {
+    "left": "test/2/image_05125.jpg",
+    "right": "train/2/image_05128.jpg",
+    "distance": 0,
+    "cross_split": true
+  },
+  {
+    "left": "train/8/image_03293.jpg",
+    "right": "train/8/image_03311.jpg",
+    "distance": 4,
+    "cross_split": false
+  },
+  {
+    "left": "train/12/image_04021.jpg",
+    "right": "train/12/image_04076.jpg",
+    "distance": 6,
+    "cross_split": false
+  },
+  {
+    "left": "train/13/image_05746.jpg",
+    "right": "train/13/image_05768.jpg",
+    "distance": 4,
+    "cross_split": false
+  },
+  {
+    "left": "train/77/image_00010.jpg",
+    "right": "train/77/image_00064.jpg",
+    "distance": 6,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01941.jpg",
+    "right": "valid/78/image_01844.jpg",
+    "distance": 4,
+    "cross_split": true
+  },
+  {
+    "left": "train/80/image_02009.jpg",
+    "right": "train/80/image_02056.jpg",
+    "distance": 4,
+    "cross_split": false
+  },
+  {
+    "left": "test/2/image_05133.jpg",
+    "right": "valid/2/image_05124.jpg",
+    "distance": 6,
+    "cross_split": true
+  },
+  {
+    "left": "valid/75/image_02141.jpg",
+    "right": "valid/75/image_02152.jpg",
+    "distance": 6,
+    "cross_split": false
+  },
+  {
+    "left": "test/78/image_01855.jpg",
+    "right": "valid/78/image_01844.jpg",
+    "distance": 4,
+    "cross_split": true
+  }
+]

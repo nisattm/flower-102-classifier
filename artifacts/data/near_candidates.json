@@ -1,0 +1,104 @@
+[
+  {
+    "left": "train/5/image_05153.jpg",
+    "right": "train/5/image_05170.jpg",
+    "distance": 4,
+    "cross_split": false
+  },
+  {
+    "left": "train/8/image_03285.jpg",
+    "right": "train/8/image_03351.jpg",
+    "distance": 1,
+    "cross_split": false
+  },
+  {
+    "left": "train/12/image_04000.jpg",
+    "right": "test/12/image_04052.jpg",
+    "distance": 2,
+    "cross_split": true
+  },
+  {
+    "left": "train/39/image_07015.jpg",
+    "right": "train/39/image_07040.jpg",
+    "distance": 1,
+    "cross_split": false
+  },
+  {
+    "left": "train/39/image_07029.jpg",
+    "right": "train/39/image_08080.jpg",
+    "distance": 0,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01827.jpg",
+    "right": "train/78/image_01870.jpg",
+    "distance": 0,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01835.jpg",
+    "right": "train/78/image_01858.jpg",
+    "distance": 0,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01867.jpg",
+    "right": "train/78/image_01933.jpg",
+    "distance": 1,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01887.jpg",
+    "right": "valid/78/image_01862.jpg",
+    "distance": 1,
+    "cross_split": true
+  },
+  {
+    "left": "train/78/image_01889.jpg",
+    "right": "train/78/image_01906.jpg",
+    "distance": 0,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01900.jpg",
+    "right": "train/78/image_01904.jpg",
+    "distance": 3,
+    "cross_split": false
+  },
+  {
+    "left": "train/78/image_01959.jpg",
+    "right": "valid/78/image_01929.jpg",
+    "distance": 1,
+    "cross_split": true
+  },
+  {
+    "left": "train/81/image_00842.jpg",
+    "right": "test/81/image_00926.jpg",
+    "distance": 2,
+    "cross_split": true
+  },
+  {
+    "left": "train/83/image_01757.jpg",
+    "right": "test/83/image_01774.jpg",
+    "distance": 2,
+    "cross_split": true
+  },
+  {
+    "left": "train/84/image_02570.jpg",
+    "right": "train/84/image_02575.jpg",
+    "distance": 2,
+    "cross_split": false
+  },
+  {
+    "left": "valid/75/image_02141.jpg",
+    "right": "test/75/image_02157.jpg",
+    "distance": 4,
+    "cross_split": true
+  },
+  {
+    "left": "test/75/image_02135.jpg",
+    "right": "test/75/image_02154.jpg",
+    "distance": 0,
+    "cross_split": false
+  }
+]

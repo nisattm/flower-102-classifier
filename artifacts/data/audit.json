@@ -1,0 +1,148 @@
+{
+  "total": 8189,
+  "splits": {
+    "train": 6552,
+    "valid": 818,
+    "test": 819
+  },
+  "classes": 102,
+  "exact_duplicate_groups": 4,
+  "confirmed_near_pairs": 98,
+  "cross_label_groups": [
+    [
+      "train/94/image_07304.jpg",
+      "valid/93/image_07303.jpg"
+    ]
+  ],
+  "test_dev_duplicate_groups": [
+    [
+      "train/2/image_05128.jpg",
+      "test/2/image_05125.jpg"
+    ],
+    [
+      "train/8/image_03326.jpg",
+      "test/8/image_03291.jpg"
+    ],
+    [
+      "train/12/image_04000.jpg",
+      "test/12/image_04052.jpg"
+    ],
+    [
+      "train/12/image_04011.jpg",
+      "test/12/image_04077.jpg"
+    ],
+    [
+      "train/46/image_01126.jpg",
+      "test/46/image_01071.jpg"
+    ],
+    [
+      "train/49/image_06244.jpg",
+      "test/49/image_06213.jpg"
+    ],
+    [
+      "train/58/image_02647.jpg",
+      "test/58/image_02721.jpg"
+    ],
+    [
+      "train/58/image_02650.jpg",
+      "test/58/image_02722.jpg"
+    ],
+    [
+      "train/58/image_02674.jpg",
+      "test/58/image_02677.jpg"
+    ],
+    [
+      "train/74/image_01234.jpg",
+      "test/74/image_01191.jpg"
+    ],
+    [
+      "train/77/image_00049.jpg",
+      "train/77/image_00182.jpg",
+      "test/77/image_00177.jpg"
+    ],
+    [
+      "train/78/image_01941.jpg",
+      "valid/78/image_01844.jpg",
+      "test/78/image_01855.jpg"
+    ],
+    [
+      "train/81/image_00842.jpg",
+      "test/81/image_00926.jpg"
+    ],
+    [
+      "train/81/image_00849.jpg",
+      "test/81/image_00826.jpg"
+    ],
+    [
+      "train/83/image_01757.jpg",
+      "test/83/image_01774.jpg"
+    ],
+    [
+      "train/92/image_03053.jpg",
+      "test/92/image_03052.jpg"
+    ],
+    [
+      "valid/2/image_05124.jpg",
+      "test/2/image_05133.jpg"
+    ],
+    [
+      "valid/49/image_06209.jpg",
+      "valid/49/image_06235.jpg",
+      "test/49/image_06215.jpg"
+    ],
+    [
+      "valid/58/image_02741.jpg",
+      "valid/58/image_02742.jpg",
+      "test/58/image_02743.jpg"
+    ],
+    [
+      "valid/75/image_02141.jpg",
+      "valid/75/image_02152.jpg",
+      "test/75/image_02157.jpg"
+    ]
+  ],
+  "excluded_exact_duplicate_paths": [
+    "train/94/image_07309.jpg",
+    "train/94/image_07328.jpg",
+    "train/99/image_07886.jpg",
+    "valid/31/image_08067.jpg"
+  ],
+  "excluded_dev_paths": [
+    "train/12/image_04000.jpg",
+    "train/12/image_04011.jpg",
+    "train/2/image_05128.jpg",
+    "train/46/image_01126.jpg",
+    "train/49/image_06244.jpg",
+    "train/58/image_02647.jpg",
+    "train/58/image_02650.jpg",
+    "train/58/image_02674.jpg",
+    "train/74/image_01234.jpg",
+    "train/77/image_00049.jpg",
+    "train/77/image_00182.jpg",
+    "train/78/image_01941.jpg",
+    "train/8/image_03326.jpg",
+    "train/81/image_00842.jpg",
+    "train/81/image_00849.jpg",
+    "train/83/image_01757.jpg",
+    "train/92/image_03053.jpg",
+    "train/94/image_07304.jpg",
+    "train/94/image_07309.jpg",
+    "train/94/image_07328.jpg",
+    "train/99/image_07886.jpg",
+    "valid/2/image_05124.jpg",
+    "valid/31/image_08067.jpg",
+    "valid/49/image_06209.jpg",
+    "valid/49/image_06235.jpg",
+    "valid/58/image_02741.jpg",
+    "valid/58/image_02742.jpg",
+    "valid/75/image_02141.jpg",
+    "valid/75/image_02152.jpg",
+    "valid/78/image_01844.jpg",
+    "valid/93/image_07303.jpg"
+  ],
+  "fold_counts": {
+    "0": 2478,
+    "1": 2447,
+    "2": 2414
+  }
+}

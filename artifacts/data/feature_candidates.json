@@ -1,0 +1,9 @@
+[
+  {
+    "left": "train/94/image_07304.jpg",
+    "right": "valid/93/image_07303.jpg",
+    "similarity": 0.9915562272071838,
+    "cross_split": true,
+    "same_class": false
+  }
+]

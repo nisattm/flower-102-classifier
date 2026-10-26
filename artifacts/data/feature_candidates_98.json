@@ -1,0 +1,37 @@
+[
+  {
+    "left": "test/49/image_06213.jpg",
+    "right": "train/49/image_06244.jpg",
+    "similarity": 0.9840956926345825,
+    "cross_split": true,
+    "same_class": true
+  },
+  {
+    "left": "train/69/image_05998.jpg",
+    "right": "valid/69/image_05958.jpg",
+    "similarity": 0.981462299823761,
+    "cross_split": true,
+    "same_class": true
+  },
+  {
+    "left": "valid/49/image_06209.jpg",
+    "right": "valid/49/image_06235.jpg",
+    "similarity": 0.9812477827072144,
+    "cross_split": false,
+    "same_class": true
+  },
+  {
+    "left": "train/75/image_02091.jpg",
+    "right": "train/75/image_02176.jpg",
+    "similarity": 0.9810308218002319,
+    "cross_split": false,
+    "same_class": true
+  },
+  {
+    "left": "train/29/image_04127.jpg",
+    "right": "train/29/image_04131.jpg",
+    "similarity": 0.980850338935852,
+    "cross_split": false,
+    "same_class": true
+  }
+]
