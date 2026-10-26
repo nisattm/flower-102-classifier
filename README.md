@@ -1,44 +1,80 @@
-# Flower 102 classification
+# Flower 102: CPU üzerinde çiçek sınıflandırma
 
-This project classifies the 102 categories in Oxford Flowers 102. The selected model is EfficientNet-B0, trained on the supplied flower archive and packaged for single-image CPU inference. The dataset itself is **not** included in the repository.
+Bu proje, Oxford Flowers 102 veri kümesindeki **102 çiçek türünü** fotoğraftan tahmin eder. Teslime seçilen model EfficientNet-B0'dır. `submission/` klasöründeki model ve tahmin kodu **GPU olmadan, CPU üzerinde ve çevrimdışı** çalışır. Modeli denemek için eğitim verisini indirmek gerekmez.
 
-## Try the model
+## Depoda neler var?
 
-Use Python 3.12 and install the packages in [`submission/requirements.txt`](submission/requirements.txt). PyTorch's CPU build is sufficient for inference. Then run:
+| Konum | İçerik |
+|---|---|
+| [`submission/`](submission/) | Kullanıma hazır model, tahmin kodu, 102 sınıf adı ve bağımlılıklar |
+| [`EXPERIMENT_REPORT.md`](EXPERIMENT_REPORT.md) | Deneylerin gerçek doğruluk, hız ve boyut sonuçları |
+| [`FINAL_MODEL_DECISION.md`](FINAL_MODEL_DECISION.md) | Final modelin hangi ölçütlerle seçildiği |
+| [`CPU_TARGET.md`](CPU_TARGET.md) | Yarışmanın CPU ve puanlama koşulları |
+| `train.py`, `train_final.py` | Geliştirme ve son eğitim kodu |
+| `artifacts/data/folds.jsonl` | Model seçimi için dondurulmuş üç doğrulama parçası |
+
+Orijinal çiçek fotoğrafları, büyük eğitim checkpoint'leri ve önceden indirilmiş ağırlıklar GitHub'a eklenmedi. **Çalıştırılabilir son model** [`submission/model.pth`](submission/model.pth) içindedir.
+
+## Kendi fotoğrafınızda deneyin
+
+Bu komutlar Windows PowerShell'de, deponun ana klasöründen çalışır. Python 3.12 kurulu olmalıdır. Önce depoyu indirin ve bağımlılıkları yükleyin:
 
 ```powershell
-python submission/predict.py --weights submission/model.pth --image path\to\flower.jpg --device cpu
-python submission/predict.py --weights submission/model.pth --folder path\to\photos --output predictions.csv --device cpu
+git clone https://github.com/nisattm/flower-102-classifier.git
+cd flower-102-classifier
+py -3.12 -m venv .venv
+./.venv/Scripts/python.exe -m pip install -r submission/requirements.txt
 ```
 
-The result contains a `class_id` from **1–102**, a `class_name`, and a confidence value. In Python, `from predict import load_model` inside `submission/` provides `classifier.predict(path)` and `classifier.logits(normalized_tensor)`. The inference code loads the package without downloading pretrained weights. See [`submission/README.md`](submission/README.md) for the small standalone package.
+Ardından fotoğrafın yolunu kendi dosyanızla değiştirin. Yol boşluk içeriyorsa tırnak işaretlerini koruyun:
 
-## Measured results
+```powershell
+./.venv/Scripts/python.exe submission/predict.py --weights submission/model.pth --image "C:/Photos/my flower.jpg" --device cpu
+```
 
-| Measurement | Result |
+Çıktı JSON biçimindedir; örnek çıktı:
+
+```json
+{
+  "class_id": "1",
+  "class_name": "pink primrose",
+  "confidence": 0.9916
+}
+```
+
+`class_id`, veri kümesindeki **1–102 arasındaki özgün kategori numarasıdır**; sıfırdan başlamaz. `class_name` okunabilir tür adıdır. `confidence`, seçilen sınıfın softmax skorudur; doğruluk garantisi olarak yorumlanmamalıdır. Fotoğrafta veri kümesi dışı bir çiçek olsa bile model bu 102 sınıftan birini seçer.
+
+Bir klasördeki JPG, JPEG, PNG ve WebP dosyalarını, alt klasörleriyle birlikte tarayıp CSV almak için:
+
+```powershell
+./.venv/Scripts/python.exe submission/predict.py --weights submission/model.pth --folder "C:/Photos/flowers" --output predictions.csv --device cpu
+```
+
+CSV sütunları `path`, `class_id`, `class_name` ve `confidence` olur. `--output` verilmezse sonuçlar ekrana JSON olarak yazılır. İşletim sisteminize göre ortam kurma ve Python içinden kullanım ayrıntıları [teslim paketi README dosyasında](submission/README.md) bulunur.
+
+## Ölçülmüş sonuçlar
+
+| Ölçüm | Sonuç |
 |---|---:|
-| Three-fold development top-1 | 7,226 / 7,339 = **98.4603%** |
-| One-time internal locked test top-1 | 809 / 819 = **98.7790%** |
-| Final FP16 model file | **8.471 MB** |
-| Final FP16 CPU latency, including file read | **43.196 ms/image** on this laptop, 50 warmups + 5 × 1,000 timings |
-| Candidate FP16 CPU latency, including file read | **30.210 ms/image** on this laptop, 50 warmups + 5 × 1,000 timings |
+| Üç geliştirme parçası toplam top-1 doğruluk | **7.226 / 7.339 = %98,4603** |
+| Bir kez açılan iç testte top-1 doğruluk | **809 / 819 = %98,7790** |
+| FP16 model dosyası | **8,471 MB** |
+| Son paketin bu dizüstünde ortalama CPU süresi; dosya okuma dahil | **43,196 ms/görüntü** |
 
-The final package and candidate were measured in separate runs; the difference shows that local timing varies. Both local means are below the proposed 50 ms limit. Full latency statistics are in [`EXPERIMENT_REPORT.md`](EXPERIMENT_REPORT.md). The internal locked test is the supplied 819-image `test` split; it is separate from the competition's unseen test. The organizer's CPU is an Intel Core i7 with 16 GB RAM and no GPU. The guideline gives a score of 60% accuracy, 25% CPU speed and 15% file size; 50 ms and 35 MB are proposed, not confirmed, thresholds. Local timing is not the organizer's timing.
+CPU ölçümünde 50 ısınma ve 5 × 1.000 tahmin kullanıldı. Seçim sırasında aynı bilgisayarda ayrı bir koşuda ölçülen fold modelinin ortalaması 30,210 ms idi; süreler koşullara göre değişebiliyor. Yarışma bilgisayarındaki gerçek süreyi ve **yarışmanın gizli test doğruluğunu henüz bilmiyoruz**. Yukarıdaki 819 görüntü, bize verilen ayrı iç testtir. Deneylerin tamamı ve ölçüm yöntemi [deney raporunda](EXPERIMENT_REPORT.md) kayıtlıdır.
 
-## Training and evaluation
+## Veri ve eğitimin özeti
 
-The original archive had 8,189 images: 6,552 `train`, 818 `valid` and 819 `test`. Training and validation used frozen three-fold splits made from `train + valid` after removing confirmed duplicates and test-observation overlaps. The final model was trained for 14 epochs on all 7,339 remaining development images. It never trained on the 819 test images. See [`FINAL_MODEL_DECISION.md`](FINAL_MODEL_DECISION.md), [`CPU_TARGET.md`](CPU_TARGET.md) and [`EXPERIMENT_REPORT.md`](EXPERIMENT_REPORT.md) for the exact selection rule, CPU protocol, run results and data audit.
+Hocanın verdiği arşivde 8.189 görüntü vardı: 6.552 `train`, 818 `valid`, 819 `test`. Geliştirme sırasında `train + valid` verisinden üç sabit doğrulama parçası oluşturuldu; doğrulanmış kopyalar ve iç testle örtüşen yakın görüntüler temizlendi. Son EfficientNet-B0, kalan **7.339 geliştirme görüntüsünün tamamında 14 epok** eğitildi. 819 iç test görüntüsü eğitime katılmadı.
 
-Training is resumable at each completed epoch. A matching command resumes from `last.pt` in the same run directory; a changed configuration or fold file is rejected. The final training command was:
+Eğitimleri tekrar yapmak için hocanın özgün `flower_data` arşivi ve ön eğitimli ağırlıklar gerekir; bunlar depoda yoktur. Son eğitim komutu:
 
 ```powershell
-python train_final.py --data path\to\flower_data --run artifacts\runs\efficient_final_all_dev --model efficient --batch 8 --workers 2 --epochs 14 --backbone-lr 0.0001
+./.venv/Scripts/python.exe train_final.py --data "C:/path/to/flower_data" --run artifacts/runs/efficient_final_all_dev --model efficient --batch 8 --workers 2 --epochs 14 --backbone-lr 0.0001
 ```
 
-Auxiliary scripts read `FLOWER_DATA_ROOT` when set; otherwise they expect a `flower_data` directory in the project. The inference package does not need the training images.
+Eğitim her tamamlanan epoktan sonra aynı koşu klasöründeki `last.pt` ile devam edebilir. Yardımcı betikler `FLOWER_DATA_ROOT` ortam değişkenini okuyabilir; tanımlı değilse proje içindeki `flower_data` klasörünü bekler. Başlangıç planı [`FLOWER_PLAN.txt`](FLOWER_PLAN.txt) içindedir; yarışma belgesi sonradan netleştiği için nihai seçim [karar dosyasında](FINAL_MODEL_DECISION.md) açıklanır.
 
-The `artifacts/runs/` checkpoints, pretrained caches, original images, and old model exports are intentionally omitted from Git. The deployable `submission/model.pth` is included. [`FLOWER_PLAN.txt`](FLOWER_PLAN.txt) is the original plan; later competition details and measured results are reflected in the decision and report files.
+## Sonraki sürümler
 
-## Future experiments
-
-Accuracy and CPU speed can be improved in later versions. Use the same frozen development folds or a genuinely new validation set to compare changes, then publish a new model version. The 819-image internal test was used once after this version's settings were frozen and should not be repeatedly used to tune later versions. The organizer's hidden test remains unseen.
+Modelin doğruluğu veya CPU hızı daha sonra geliştirilebilir. Yeni fikirleri aynı geliştirme parçalarında veya gerçekten yeni bir doğrulama kümesinde karşılaştırıp ayrı bir model sürümü yayımlamak gerekir. Bu sürüm seçildikten sonra 819 görüntülük iç test **bir kez** kullanıldı; sonraki ayarları o test sonucuna göre tekrar tekrar seçmemek gerekir.
