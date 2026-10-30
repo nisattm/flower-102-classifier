@@ -1,45 +1,49 @@
-# Flower 102: kullanıma hazır CPU tahmin paketi
+# Flower 102 — CPU Inference Package
 
-Bu klasör, bir fotoğraftaki çiçeği **102 kategoriden biri** olarak sınıflandırmak için gereken dosyaları içerir. Model EfficientNet-B0'dır. Eğitim görüntüleri veya GPU gerekmez; bağımlılıklar kurulduktan sonra tahminler internet bağlantısı olmadan CPU'da çalışır.
+This directory is the **ready-to-run submission** for the 102-class flower recognition project. It contains the selected EfficientNet-B0 model, its preprocessing and class mapping, and a Python inference script. The model runs on a CPU without the training dataset or a GPU. Once Python dependencies are installed, inference does not require a network connection.
 
-## Dosyalar
+**Project team:** Nisa Atım (220205014), Ceren Yüksel (220201039), Mustafa Eymen Aslan (210201004), and Efekan Coşkun (220201024).
 
-| Dosya | Görevi |
+For the dataset audit, model comparison, training recipe, and interpretation of results, see the [main project README](../README.md) and [experiment report](../EXPERIMENT_REPORT.md).
+
+## Included files
+
+| File | Purpose |
 |---|---|
-| `model.pth` | FP16 biçiminde kaydedilmiş son model ağırlıkları ve ön işleme ayarları |
-| `predict.py` | Tek fotoğraf, klasör ve Python API'si için tahmin kodu |
-| `class_names.json` | 1–102 kategori numaralarının okunabilir adları |
-| `requirements.txt` | Python bağımlılıklarının sabitlenmiş sürümleri |
+| `model.pth` | Final EfficientNet-B0 weights, preprocessing configuration, and embedded class names |
+| `predict.py` | Single-image, recursive folder, and Python API inference |
+| `class_names.json` | Human-readable names for the original class IDs 1–102 |
+| `requirements.txt` | Pinned Python package versions |
 
-Bu dosyaları birlikte tutun. `model.pth` yaklaşık **8,47 MB** yer kaplar. Model dosyasının içinde de sınıf adları vardır; dıştaki `class_names.json` ayrıca inceleme ve eşleme için sunulur.
+Keep these files together. The saved `model.pth` is approximately **8.47 MB**. It stores weights in FP16 for a smaller file; the code loads them into FP32 for CPU computation.
 
-## Kurulum
+## Installation
 
-**Python 3.12** kullanın. Aşağıdaki komutları bu `submission` klasöründe çalıştırın. Windows PowerShell:
+Use **Python 3.12** and run the following commands **inside this `submission` directory**. On Windows PowerShell:
 
 ```powershell
 py -3.12 -m venv .venv
 ./.venv/Scripts/python.exe -m pip install -r requirements.txt
 ```
 
-macOS veya Linux'ta uyumlu PyTorch paketleri varsa:
+On macOS or Linux, if compatible PyTorch packages are available:
 
 ```bash
 python3.12 -m venv .venv
 ./.venv/bin/python -m pip install -r requirements.txt
 ```
 
-Kurulumda paketler indirilir. **Tahmin aşaması** ağırlıkları indirmez ve GPU istemez. Bu proje Windows CPU ortamında doğrulandı; başka işletim sistemlerinde paketlerin bulunabilirliği değişebilir.
+Package installation needs access to the Python package index. CPU inference was verified on Windows; other operating systems may require compatible package builds.
 
-## Tek fotoğrafı sınıflandırma
+## Predict one image
 
-Windows:
+On Windows, replace the path below with an existing photograph. Quote paths that contain spaces:
 
 ```powershell
-./.venv/Scripts/python.exe predict.py --weights model.pth --image "C:/Photos/my flower.jpg" --device cpu
+./.venv/Scripts/python.exe predict.py --weights model.pth --image "C:/Photos/flower.jpg" --device cpu
 ```
 
-macOS veya Linux'ta aynı komutta `./.venv/bin/python` kullanın. Dosya yolunu kendi fotoğrafınızla değiştirin; boşluk içeren yolları tırnak içine alın. Örnek çıktı biçimi:
+On macOS or Linux, use `./.venv/bin/python` in the same command. The result is JSON in this format:
 
 ```json
 {
@@ -49,32 +53,32 @@ macOS veya Linux'ta aynı komutta `./.venv/bin/python` kullanın. Dosya yolunu k
 }
 ```
 
-`class_id` **metin olarak dönen 1–102 kategori numarasıdır**. `class_name` kategori adıdır. `confidence` 0–1 arası softmax skorudur; gerçek dünyadaki kesinlik garantisi değildir. Model, veri kümesi dışındaki görüntüler için de 102 sınıftan birini tahmin eder.
+`class_id` is the **original 1–102 category number, returned as a string**; it is not a zero-based index. `class_name` is the corresponding readable label. `confidence` is the predicted class's softmax score, not a guarantee that the classification is correct. The classifier will still choose one of the 102 classes for an out-of-distribution image.
 
-## Bir klasörü tarama
+## Predict a folder
 
 ```powershell
 ./.venv/Scripts/python.exe predict.py --weights model.pth --folder "C:/Photos/flowers" --output predictions.csv --device cpu
 ```
 
-Kod, klasörün **alt klasörlerini de** tarar ve `.jpg`, `.jpeg`, `.png`, `.webp` uzantılarını işler. CSV sütunları `path`, `class_id`, `class_name`, `confidence` olur. `--output` seçeneğini çıkarırsanız sonuçlar ekrana JSON listesi olarak yazılır. Çıktı klasörü önceden var olmalıdır.
+The script searches subdirectories and accepts `.jpg`, `.jpeg`, `.png`, and `.webp` files. The CSV columns are `path`, `class_id`, `class_name`, and `confidence`. Omit `--output` to print a JSON list instead. The output directory must already exist.
 
-## Python kodundan kullanım
+## Python API and evaluator integration
 
 ```python
 from predict import load_model
 
 classifier = load_model("model.pth", device="cpu")
-result = classifier.predict("my_flower.jpg")
-print(result["class_id"], result["class_name"], result["confidence"])
+result = classifier.predict("flower.jpg")
+class_id = int(result["class_id"])  # Original class ID, 1 through 102
 ```
 
-`classifier.predict(path)` resmi açar, EXIF yönünü düzeltir, RGB'ye dönüştürür ve modelin kayıtlı ayarlarıyla yeniden boyutlandırıp normalize eder. Daha düşük düzeyli `classifier.logits(images)`, **önceden normalize edilmiş** `[batch, 3, height, width]` tensöründen `[batch, 102]` ham skor üretir. Özel bir ad listesi kullanmak isterseniz komut satırında `--names path/to/class_names.json` verebilirsiniz.
+`classifier.predict(path)` opens the image, corrects EXIF orientation, converts it to RGB, and applies the model's saved resize, crop, and normalization configuration. `classifier.logits(images)` is also available for an evaluator that already prepares normalized `[batch, 3, height, width]` tensors; it returns raw `[batch, 102]` scores. The command-line `--names path/to/class_names.json` option can override the embedded names.
 
-## Model ve sonuçların kapsamı
+The model is created with `pretrained=False` and loaded from the included file, so no weights are downloaded during inference. If an instructor provides a different required function signature, a small adapter can call `load_model` and return the same 1–102 class ID.
 
-`model.pth` diskte FP16 ağırlık kullanır; `predict.py` bunları CPU'ya yüklerken FP32 ile hesap yapar. Model `pretrained=False` kurulduğu için tahmin sırasında dışarıdan ağırlık indirilmez.
+## What the measured numbers mean
 
-Final model, temizlenmiş **7.339 geliştirme görüntüsünde 14 epok** eğitildi. Ayarlar dondurulduktan sonra bize verilen 819 görüntülük iç testte **809 doğru tahmin (%98,7790 top-1)** yaptı. Bu, yarışmanın gizli test sonucu değildir. Bu dizüstünde, dosya okuma dahil ortalama CPU süresi **43,196 ms/görüntü** olarak ölçüldü (50 ısınma, 5 × 1.000 tahmin). Başka CPU'larda süre değişebilir.
+The final model was trained for **14 epochs on 7,339 cleaned development images**. After model selection and settings were frozen, it classified **809 of 819 supplied internal-test images correctly (98.7790% top-1)**. This internal test is separate from the competition's hidden test. On our laptop, the final package averaged **43.196 ms per image on CPU including file read** in a benchmark with 50 warm-ups and five rounds of 1,000 predictions. The instructor's CPU and timing procedure may produce a different result.
 
-Veri denetimi, diğer modeller, üç doğrulama parçası ve ölçüm ayrıntıları üst klasördeki [deney raporunda](../EXPERIMENT_REPORT.md) bulunur. Hata alırsanız komutu bu klasörde çalıştırdığınızı, `model.pth` yolunu ve `requirements.txt` kurulumunu kontrol edin.
+If a command fails, check that it is run from this directory, the image and `model.pth` paths exist, and the packages from `requirements.txt` were installed into the Python environment used for the command.
