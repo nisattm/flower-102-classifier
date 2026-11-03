@@ -66,7 +66,7 @@ def main() -> None:
         lines += ['', 'Bu doğruluklar yalnız geliştirme parçasına aittir. Verilen arşivdeki 819 görüntülük iç kilitli test kullanılmadı; yarışma gizli testi ayrıca öğretmendedir.', '']
     if locked_test.exists():
         result = json.loads(locked_test.read_text(encoding='utf8'))
-        lines += ['## Tek seferlik iç kilitli test', '',
+        lines += ['## İlk iç test değerlendirmesi (önceki Python paketi)', '',
                   f'- Model: `{result["checkpoint"]}`.',
                   f'- Görüntü: {result["count"]}; top-1: {result["top1"]:.4%}; macro: {result["macro"]:.4%}; kayıp: {result["loss"]:.4f}.',
                   '- Bu 819 görüntü geliştirme veya son eğitime katılmadı. Bu sonuç yarışmanın gizli test puanı değildir.', '']
@@ -128,7 +128,17 @@ def main() -> None:
                   '- `torch.jit.trace` ile mimari ve ağırlıklar dosyaya gömüldü. CPU üzerinde yalnız PyTorch ile yükleme doğrulandı.',
                   '- Girdi: `[B, 3, 224, 224]` RGB float, 0–1. Eğitimdeki ortalama ve standart sapma (her kanal için 0.5) dosyanın içinde uygulanır.',
                   '- Çıktı: `[B, 102]` softmax olasılıkları; her satırın toplamı 1, sütun `i` sınıf `i+1`.',
-                  '- İç kilitli 819 test yeni biçim için tekrar açılmadı; önceki test sonucu farklı ön işlemeyle elde edilmişti.']
+                  '- Önceki Python paketinin iç test sonucu farklı ön işlemeyle elde edilmişti.']
+        torchscript_test = Path('artifacts/locked_test_torchscript.json')
+        if torchscript_test.exists():
+            new_test = json.loads(torchscript_test.read_text(encoding='utf8'))
+            lines += [f'- Dondurulmuş `model.pt` ile verilen 819 görüntülük iç test: '
+                      f'{new_test["correct"]}/{new_test["total"]} = {new_test["top1_percent"]:.4f}% top-1; '
+                      f'macro {new_test["macro_top1_percent"]:.4f}%.',
+                      '- Ön işleme: kısa kenar 256, merkez kesit 224, RGB 0–1; PDF interpolasyonu belirtmediği için bilinear varsayıldı.',
+                      '- Bu ikinci ölçüm kullanıcı isteğiyle yeni teslim biçimi için yapıldı; model sonuca göre değiştirilmedi. Yarışmanın gizli testi değildir.']
+        else:
+            lines.append('- Yeni biçim için iç test henüz tekrar ölçülmedi.')
         if format_validation.exists():
             check = json.loads(format_validation.read_text(encoding='utf8'))
             lines.append(f'- Belgede tarif edilen 256 kısa kenar + 224 merkez kesit ön işlemiyle fold {check["fold"]} doğrulama kontrolü '

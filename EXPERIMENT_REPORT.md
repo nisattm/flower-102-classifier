@@ -1,6 +1,6 @@
 # Deney raporu
 
-Oluşturulma: 2026-11-03T23:13:23+03:00
+Oluşturulma: 2026-11-03T23:22:28+03:00
 
 ## Veri denetimi
 
@@ -36,7 +36,7 @@ Oluşturulma: 2026-11-03T23:13:23+03:00
 
 Tablodaki doğruluklar yalnız geliştirme parçalarına aittir. İç kilitli test sonucu aşağıda ayrı verilmiştir; yarışma gizli testi ayrıca öğretmendedir.
 
-## Tek seferlik iç kilitli test
+## İlk iç test değerlendirmesi (önceki Python paketi)
 
 - Model: `submission/model.pth`.
 - Görüntü: 819; top-1: 98.7790%; macro: 98.8489%; kayıp: 0.2002.
@@ -117,7 +117,10 @@ Her satır tek bir görüntü ile ölçülmüştür. Tensör süresi görüntü 
 - `torch.jit.trace` ile mimari ve ağırlıklar dosyaya gömüldü. CPU üzerinde yalnız PyTorch ile yükleme doğrulandı.
 - Girdi: `[B, 3, 224, 224]` RGB float, 0–1. Eğitimdeki ortalama ve standart sapma (her kanal için 0.5) dosyanın içinde uygulanır.
 - Çıktı: `[B, 102]` softmax olasılıkları; her satırın toplamı 1, sütun `i` sınıf `i+1`.
-- İç kilitli 819 test yeni biçim için tekrar açılmadı; önceki test sonucu farklı ön işlemeyle elde edilmişti.
+- Önceki Python paketinin iç test sonucu farklı ön işlemeyle elde edilmişti.
+- Dondurulmuş `model.pt` ile verilen 819 görüntülük iç test: 806/819 = 98.4127% top-1; macro 98.5025%.
+- Ön işleme: kısa kenar 256, merkez kesit 224, RGB 0–1; PDF interpolasyonu belirtmediği için bilinear varsayıldı.
+- Bu ikinci ölçüm kullanıcı isteğiyle yeni teslim biçimi için yapıldı; model sonuca göre değiştirilmedi. Yarışmanın gizli testi değildir.
 - Belgede tarif edilen 256 kısa kenar + 224 merkez kesit ön işlemiyle fold 0 doğrulama kontrolü (interpolasyon belirtilmediğinden bilinear varsayıldı): 2454/2478 = 99.0315%. Bu ayrı bir fold modelidir; final modelin gizli test sonucu değildir.
 - Yerel CPU model-ileri-geçiş süresi: ortalama 23.106 ms/görüntü, medyan 23.024 ms, p95 26.641 ms; 50 ısınma + 5×1000 tekrar, 6 iş parçacığı. Görüntü okuma/ön işleme bu süreye dahil değildir.
 - SHA-256: `ea03bb53b0e91f1257dd799ce853e211c5fcb4a13f26e0fd16e117cc84badf17`.

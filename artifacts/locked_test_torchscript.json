@@ -1,0 +1,15 @@
+{
+  "run_at_utc": "2026-11-03T20:21:43.418174+00:00",
+  "model": "submission_ready\\model.pt",
+  "model_sha256": "ea03bb53b0e91f1257dd799ce853e211c5fcb4a13f26e0fd16e117cc84badf17",
+  "manifest_sha256": "519819b22389b919bdd0ef18b218e12085dad8b4099fd41ba81ecf3c8d800205",
+  "split": "supplied_internal_test",
+  "preprocessing": "RGB; resize short side to 256 with assumed bilinear interpolation; center crop 224; ToTensor 0-1; normalization inside model",
+  "correct": 806,
+  "total": 819,
+  "top1_percent": 98.4126984126984,
+  "macro_top1_percent": 98.50246159069688,
+  "elapsed_seconds": 34.29140159999952,
+  "cpu_threads": 6,
+  "batch": 16
+}

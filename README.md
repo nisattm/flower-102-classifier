@@ -55,12 +55,13 @@ The final EfficientNet-B0 used the `efficientnet_b0.ra4_e3600_r224_in1k` pretrai
 
 | Measurement | Result |
 |---|---:|
-| One-time evaluation of the selected model on the supplied 819-image internal test, using the earlier preprocessing | **809 / 819 = 98.7790% top-1** |
+| Official TorchScript `model.pt` on the supplied internal test, with documented 256/224 preprocessing and assumed bilinear interpolation | **806 / 819 = 98.4127% top-1** |
+| Earlier Python package on the same internal test, using its earlier preprocessing | 809 / 819 = 98.7790% top-1 |
 | New-format compatibility check on the frozen fold-0 checkpoint and validation images | **2,454 / 2,478 = 99.0315% top-1** |
 | Official TorchScript `submission_ready/model.pt` file | **17.242 MB** |
 | Official TorchScript file on our CPU, model forward only, batch size 1 | **23.106 ms/image mean** |
 
-The new TorchScript speed check used 50 warm-ups and 5 × 1,000 timed forward passes with six CPU threads; it **excludes image reading and evaluator preprocessing**. Results are in [`artifacts/benchmarks/efficient_final_torchscript_cpu.json`](artifacts/benchmarks/efficient_final_torchscript_cpu.json). The earlier 8.471 MB weight package and its 43.196 ms/image disk-included timing are recorded in [`EXPERIMENT_REPORT.md`](EXPERIMENT_REPORT.md), but refer to a different file and timing scope. The fold-0 compatibility check uses a separate validation checkpoint, not the final model; it followed the documented 256/224 geometry with bilinear interpolation because the PDF does not specify interpolation. Its result is [recorded here](artifacts/benchmarks/efficient_f0_torchscript_evaluator_fold0.json). **No competition hidden-test result is claimed.** The internal 819-image test was not reopened to tune the new format.
+The new TorchScript speed check used 50 warm-ups and 5 × 1,000 timed forward passes with six CPU threads; it **excludes image reading and evaluator preprocessing**. Results are in [`artifacts/benchmarks/efficient_final_torchscript_cpu.json`](artifacts/benchmarks/efficient_final_torchscript_cpu.json). The earlier 8.471 MB weight package and its 43.196 ms/image disk-included timing are recorded in [`EXPERIMENT_REPORT.md`](EXPERIMENT_REPORT.md), but refer to a different file and timing scope. The fold-0 compatibility check uses a separate validation checkpoint, not the final model; it followed the documented 256/224 geometry with bilinear interpolation because the PDF does not specify interpolation. Its result is [recorded here](artifacts/benchmarks/efficient_f0_torchscript_evaluator_fold0.json). The new [internal-test result](artifacts/locked_test_torchscript.json) was measured only after `model.pt` was frozen; the model was not changed in response. **Neither internal-test result is a competition hidden-test result.**
 
 ## Run and verify the new model
 
@@ -117,4 +118,4 @@ The new one-file artifact was exported from the frozen final weights without ret
 
 `evaluate_torchscript_format.py` checks the new interface on frozen development folds without reading the supplied internal test. `benchmark_torchscript_submission.py` records forward latency separately from preprocessing and file I/O.
 
-For later model versions, compare changes on the frozen development folds or genuinely new validation data. The supplied 819-image internal test was evaluated once after selection and should not be reused for repeated tuning.
+For later model versions, compare changes on the frozen development folds or genuinely new validation data. The supplied internal test was evaluated under the earlier and updated submission interfaces; it should not be reused for repeated tuning.
