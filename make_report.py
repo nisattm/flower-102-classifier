@@ -90,9 +90,10 @@ def main() -> None:
         lines.append('')
     submission_model = Path('submission/model.pth')
     if submission_model.exists():
-        lines += ['## Teslim modeli', '',
+        lines += ['## Önceki Python çıkarım paketi', '',
                   f'- Dosya: `{submission_model.as_posix()}`; gerçek boyut: {submission_model.stat().st_size / 1e6:.3f} MB.',
-                  '- FP16 ağırlıklar CPU modeline FP32 yüklenir; bu dosya boyutunu küçültür, hesaplamayı kendiliğinden hızlandırmaz.', '']
+                  '- FP16 ağırlıklar CPU modeline FP32 yüklenir; bu dosya boyutunu küçültür, hesaplamayı kendiliğinden hızlandırmaz.',
+                  '- Bu dosya 3 Kasım 2026 tarihinde açıklanan tek dosyalı TorchScript teslim biçimine uygun değildir.', '']
     package_checks = sorted(Path('artifacts/exports').glob('*_verified_*.json')) if Path('artifacts/exports').exists() else []
     if package_checks:
         lines += ['## Dışa aktarılan model doğruluğu', '',
@@ -108,6 +109,8 @@ def main() -> None:
                   '|---|---|---:|---:|---:|---:|']
         for path in benchmarks:
             result = json.loads(path.read_text(encoding='utf8'))
+            if 'latency' not in result:
+                continue
             lat = result['latency']
             tensor = lat['tensor']
             lines.append(f'| {path.stem} | {result["device"]} | {tensor["mean_ms"]:.2f}/{tensor["median_ms"]:.2f}/{tensor["p95_ms"]:.2f} ms | '
@@ -116,6 +119,30 @@ def main() -> None:
         lines += ['', 'Her satır tek bir görüntü ile ölçülmüştür. Tensör süresi görüntü okuma ve ön işlemeyi içermez.', '']
     else:
         lines += ['Hız ölçümleri henüz tamamlanmadı.', '']
+    torchscript = Path('submission_ready/model.pt')
+    torchscript_benchmark = Path('artifacts/benchmarks/efficient_final_torchscript_cpu.json')
+    format_validation = Path('artifacts/benchmarks/efficient_f0_torchscript_evaluator_fold0.json')
+    if torchscript.exists():
+        lines += ['## Yeni tek dosyalı TorchScript teslimi', '',
+                  f'- Teslim edilecek **tek dosya**: `{torchscript.as_posix()}`; boyut: {torchscript.stat().st_size / 1e6:.3f} MB.',
+                  '- `torch.jit.trace` ile mimari ve ağırlıklar dosyaya gömüldü. CPU üzerinde yalnız PyTorch ile yükleme doğrulandı.',
+                  '- Girdi: `[B, 3, 224, 224]` RGB float, 0–1. Eğitimdeki ortalama ve standart sapma (her kanal için 0.5) dosyanın içinde uygulanır.',
+                  '- Çıktı: `[B, 102]` softmax olasılıkları; her satırın toplamı 1, sütun `i` sınıf `i+1`.',
+                  '- İç kilitli 819 test yeni biçim için tekrar açılmadı; önceki test sonucu farklı ön işlemeyle elde edilmişti.']
+        if format_validation.exists():
+            check = json.loads(format_validation.read_text(encoding='utf8'))
+            lines.append(f'- Belgede tarif edilen 256 kısa kenar + 224 merkez kesit ön işlemiyle fold {check["fold"]} doğrulama kontrolü '
+                         '(interpolasyon belirtilmediğinden bilinear varsayıldı): '
+                         f'{check["correct"]}/{check["total"]} = {check["top1_percent"]:.4f}%. '
+                         'Bu ayrı bir fold modelidir; final modelin gizli test sonucu değildir.')
+        if torchscript_benchmark.exists():
+            speed = json.loads(torchscript_benchmark.read_text(encoding='utf8'))
+            lines.append(f'- Yerel CPU model-ileri-geçiş süresi: ortalama {speed["mean_ms"]:.3f} ms/görüntü, '
+                         f'medyan {speed["median_ms"]:.3f} ms, p95 {speed["p95_ms"]:.3f} ms; '
+                         f'{speed["warmup"]} ısınma + {speed["rounds"]}×{speed["per_round"]} tekrar, '
+                         f'{speed["threads"]} iş parçacığı. Görüntü okuma/ön işleme bu süreye dahil değildir.')
+            lines.append(f'- SHA-256: `{speed["sha256"]}`.')
+        lines.append('')
     lines += ['## Yarışma kılavuzu v1', '',
               '- Final puanı: %60 doğruluk + %25 CPU tahmin süresi puanı + %15 kayıtlı model boyutu puanı.',
               '- CPU ortamı: aynı Intel Core i7 bilgisayar, 16 GB RAM, GPU yok. İşlemci modeli ve kesin zamanlama yöntemi henüz belirtilmedi.',

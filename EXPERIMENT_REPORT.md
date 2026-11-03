@@ -1,6 +1,6 @@
 # Deney raporu
 
-Oluşturulma: 2026-10-26T14:08:41+03:00
+Oluşturulma: 2026-11-03T23:13:23+03:00
 
 ## Veri denetimi
 
@@ -74,10 +74,11 @@ Tablodaki doğruluklar yalnız geliştirme parçalarına aittir. İç kilitli te
 | teacher_f0_fp16.pth | 55.958 MB |
 | teacher_f0_fp32.pth | 111.848 MB |
 
-## Teslim modeli
+## Önceki Python çıkarım paketi
 
 - Dosya: `submission/model.pth`; gerçek boyut: 8.471 MB.
 - FP16 ağırlıklar CPU modeline FP32 yüklenir; bu dosya boyutunu küçültür, hesaplamayı kendiliğinden hızlandırmaz.
+- Bu dosya 3 Kasım 2026 tarihinde açıklanan tek dosyalı TorchScript teslim biçimine uygun değildir.
 
 ## Dışa aktarılan model doğruluğu
 
@@ -109,6 +110,17 @@ Tablodaki doğruluklar yalnız geliştirme parçalarına aittir. İç kilitli te
 | teacher_f0_fp32_cuda | cuda | 12.78/12.46/14.25 ms | 17.37 ms | 23.89 ms | 10 + 1×100 |
 
 Her satır tek bir görüntü ile ölçülmüştür. Tensör süresi görüntü okuma ve ön işlemeyi içermez.
+
+## Yeni tek dosyalı TorchScript teslimi
+
+- Teslim edilecek **tek dosya**: `submission_ready/model.pt`; boyut: 17.242 MB.
+- `torch.jit.trace` ile mimari ve ağırlıklar dosyaya gömüldü. CPU üzerinde yalnız PyTorch ile yükleme doğrulandı.
+- Girdi: `[B, 3, 224, 224]` RGB float, 0–1. Eğitimdeki ortalama ve standart sapma (her kanal için 0.5) dosyanın içinde uygulanır.
+- Çıktı: `[B, 102]` softmax olasılıkları; her satırın toplamı 1, sütun `i` sınıf `i+1`.
+- İç kilitli 819 test yeni biçim için tekrar açılmadı; önceki test sonucu farklı ön işlemeyle elde edilmişti.
+- Belgede tarif edilen 256 kısa kenar + 224 merkez kesit ön işlemiyle fold 0 doğrulama kontrolü (interpolasyon belirtilmediğinden bilinear varsayıldı): 2454/2478 = 99.0315%. Bu ayrı bir fold modelidir; final modelin gizli test sonucu değildir.
+- Yerel CPU model-ileri-geçiş süresi: ortalama 23.106 ms/görüntü, medyan 23.024 ms, p95 26.641 ms; 50 ısınma + 5×1000 tekrar, 6 iş parçacığı. Görüntü okuma/ön işleme bu süreye dahil değildir.
+- SHA-256: `ea03bb53b0e91f1257dd799ce853e211c5fcb4a13f26e0fd16e117cc84badf17`.
 
 ## Yarışma kılavuzu v1
 

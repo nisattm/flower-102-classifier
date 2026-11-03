@@ -1,0 +1,22 @@
+{
+  "model": "submission_ready\\model.pt",
+  "sha256": "ea03bb53b0e91f1257dd799ce853e211c5fcb4a13f26e0fd16e117cc84badf17",
+  "bytes": 17241705,
+  "device": "cpu",
+  "input": "[1, 3, 224, 224] RGB float32 in [0, 1]",
+  "scope": "TorchScript forward only; evaluator image preprocessing excluded",
+  "threads": 6,
+  "warmup": 50,
+  "rounds": 5,
+  "per_round": 1000,
+  "mean_ms": 23.10557536,
+  "median_ms": 23.02445,
+  "p95_ms": 26.6406,
+  "round_means_ms": [
+    23.715898,
+    23.7502665,
+    22.7748283,
+    22.6941379,
+    22.5927461
+  ]
+}

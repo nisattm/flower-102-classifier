@@ -1,0 +1,10 @@
+{
+  "model": "artifacts\\exports\\efficient_f0_v5_evaluator.pt",
+  "fold": 0,
+  "preprocessing": "evaluator",
+  "correct": 2454,
+  "total": 2478,
+  "top1_percent": 99.0314769975787,
+  "elapsed_seconds": 98.43196929991245,
+  "cpu_threads": 6
+}

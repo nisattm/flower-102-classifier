@@ -1,6 +1,8 @@
-# Flower 102 — CPU Inference Package
+# Flower 102 — Legacy Python Inference Package
 
-This directory is the **ready-to-run submission** for the 102-class flower recognition project. It contains the selected EfficientNet-B0 model, its preprocessing and class mapping, and a Python inference script. The model runs on a CPU without the training dataset or a GPU. Once Python dependencies are installed, inference does not require a network connection.
+> **Official submission format updated on 3 November 2026:** this directory's `model.pth` and Python script are retained for reproducibility, but `model.pth` is **not** accepted by the instructor's new evaluator. Submit only [`submission_ready/model.pt`](../submission_ready/model.pt), a self-contained TorchScript file. See the [main README](../README.md) for the new input/output contract.
+
+This directory is the earlier Python inference package for the 102-class flower recognition project. It contains the selected EfficientNet-B0 weights, preprocessing and class mapping, and a Python inference script. It remains useful for local exploration and reproducing the earlier evaluation. The model runs on a CPU without the training dataset or a GPU. Once Python dependencies are installed, inference does not require a network connection.
 
 **Project team:** Nisa Atım (220205014), Ceren Yüksel (220201039), Mustafa Eymen Aslan (210201004), and Efekan Coşkun (220201024).
 
@@ -79,6 +81,6 @@ The model is created with `pretrained=False` and loaded from the included file, 
 
 ## What the measured numbers mean
 
-The final model was trained for **14 epochs on 7,339 cleaned development images**. After model selection and settings were frozen, it classified **809 of 819 supplied internal-test images correctly (98.7790% top-1)**. This internal test is separate from the competition's hidden test. On our laptop, the final package averaged **43.196 ms per image on CPU including file read** in a benchmark with 50 warm-ups and five rounds of 1,000 predictions. The instructor's CPU and timing procedure may produce a different result.
+The final model was trained for **14 epochs on 7,339 cleaned development images**. After model selection and settings were frozen, this earlier Python package classified **809 of 819 supplied internal-test images correctly (98.7790% top-1)**. This internal test is separate from the competition's hidden test. On our laptop, this earlier package averaged **43.196 ms per image on CPU including file read** in a benchmark with 50 warm-ups and five rounds of 1,000 predictions. These results do not describe the new TorchScript file's timing or the instructor's CPU.
 
 If a command fails, check that it is run from this directory, the image and `model.pth` paths exist, and the packages from `requirements.txt` were installed into the Python environment used for the command.
