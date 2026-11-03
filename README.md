@@ -24,7 +24,7 @@ This project classifies a photograph into one of **102 flower categories**. We t
 | Output | One `[B, 102]` tensor of probabilities in `[0, 1]`; each row sums to 1 |
 | Class order | Output column `i` represents class `i + 1`, for classes 1 through 102 |
 
-The file was loaded and run on CPU with batch sizes 1, 2, and 8. The saved graph matched the eager model on random 0–1 inputs, and a separate validation run using the evaluator's preprocessing checked the numeric class order on real flower images. Export and validation commands are described below.
+The file was loaded and run on CPU with batch sizes 1, 2, and 8. The saved graph matched the eager model on random 0–1 inputs, and a separate validation run using the documented resize/crop with assumed bilinear interpolation checked the numeric class order on real flower images. Export and validation commands are described below.
 
 ## Evaluation objective
 
