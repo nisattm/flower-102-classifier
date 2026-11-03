@@ -1,6 +1,6 @@
 # Deney raporu
 
-Oluşturulma: 2026-11-03T23:22:28+03:00
+Oluşturulma: 2026-11-03T23:30:30+03:00
 
 ## Veri denetimi
 
@@ -124,6 +124,7 @@ Her satır tek bir görüntü ile ölçülmüştür. Tensör süresi görüntü 
 - Belgede tarif edilen 256 kısa kenar + 224 merkez kesit ön işlemiyle fold 0 doğrulama kontrolü (interpolasyon belirtilmediğinden bilinear varsayıldı): 2454/2478 = 99.0315%. Bu ayrı bir fold modelidir; final modelin gizli test sonucu değildir.
 - Yerel CPU model-ileri-geçiş süresi: ortalama 23.106 ms/görüntü, medyan 23.024 ms, p95 26.641 ms; 50 ısınma + 5×1000 tekrar, 6 iş parçacığı. Görüntü okuma/ön işleme bu süreye dahil değildir.
 - SHA-256: `ea03bb53b0e91f1257dd799ce853e211c5fcb4a13f26e0fd16e117cc84badf17`.
+- Yerel CPU dosyadan tahmine tam işlem süresi: ortalama 33.390 ms/görüntü, medyan 31.106 ms, p95 49.991 ms; 50 ısınma + 5×1000 tekrar, 6 iş parçacığı. Aynı görüntü tekrar okunarak RGB, bilinear 256/224 ön işleme, model ileri geçişi ve sınıf seçimi ölçüldü; yarışma bilgisayarındaki süre değildir.
 
 ## Yarışma kılavuzu v1
 

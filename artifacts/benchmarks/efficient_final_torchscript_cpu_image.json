@@ -1,0 +1,21 @@
+{
+  "model": "submission_ready\\model.pt",
+  "sha256": "ea03bb53b0e91f1257dd799ce853e211c5fcb4a13f26e0fd16e117cc84badf17",
+  "device": "cpu",
+  "scope": "image file read + RGB + bilinear resize short side 256 + center crop 224 + ToTensor + model forward + argmax",
+  "sample_image": "image_06734.jpg",
+  "threads": 6,
+  "warmup": 50,
+  "rounds": 5,
+  "per_round": 1000,
+  "mean_ms": 33.39022446,
+  "median_ms": 31.1059,
+  "p95_ms": 49.9912,
+  "round_means_ms": [
+    35.1374161,
+    30.8130555,
+    34.514336,
+    33.4254814,
+    33.0608333
+  ]
+}

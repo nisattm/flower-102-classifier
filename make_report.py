@@ -121,6 +121,7 @@ def main() -> None:
         lines += ['Hız ölçümleri henüz tamamlanmadı.', '']
     torchscript = Path('submission_ready/model.pt')
     torchscript_benchmark = Path('artifacts/benchmarks/efficient_final_torchscript_cpu.json')
+    torchscript_image_benchmark = Path('artifacts/benchmarks/efficient_final_torchscript_cpu_image.json')
     format_validation = Path('artifacts/benchmarks/efficient_f0_torchscript_evaluator_fold0.json')
     if torchscript.exists():
         lines += ['## Yeni tek dosyalı TorchScript teslimi', '',
@@ -152,6 +153,13 @@ def main() -> None:
                          f'{speed["warmup"]} ısınma + {speed["rounds"]}×{speed["per_round"]} tekrar, '
                          f'{speed["threads"]} iş parçacığı. Görüntü okuma/ön işleme bu süreye dahil değildir.')
             lines.append(f'- SHA-256: `{speed["sha256"]}`.')
+        if torchscript_image_benchmark.exists():
+            speed = json.loads(torchscript_image_benchmark.read_text(encoding='utf8'))
+            lines.append(f'- Yerel CPU dosyadan tahmine tam işlem süresi: ortalama {speed["mean_ms"]:.3f} ms/görüntü, '
+                         f'medyan {speed["median_ms"]:.3f} ms, p95 {speed["p95_ms"]:.3f} ms; '
+                         f'{speed["warmup"]} ısınma + {speed["rounds"]}×{speed["per_round"]} tekrar, '
+                         f'{speed["threads"]} iş parçacığı. Aynı görüntü tekrar okunarak RGB, bilinear 256/224 ön işleme, '
+                         'model ileri geçişi ve sınıf seçimi ölçüldü; yarışma bilgisayarındaki süre değildir.')
         lines.append('')
     lines += ['## Yarışma kılavuzu v1', '',
               '- Final puanı: %60 doğruluk + %25 CPU tahmin süresi puanı + %15 kayıtlı model boyutu puanı.',
